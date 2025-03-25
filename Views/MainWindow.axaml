@@ -1,19 +1,110 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Task3_10.ViewModels"
+        xmlns:models="using:Task3_10.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="using:Task3_10.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Task3_10.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Task3_10">
+        Title="Oil Extraction Simulation">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+    <Window.Resources>
+        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+    </Window.Resources>
 
-
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <Button Content="Add Oil Rig" Command="{Binding AddRigCommand}" Margin="5" Padding="10,5"/>
+            <Button Content="Add Mechanic" Command="{Binding AddMechanicCommand}" Margin="5" Padding="10,5"/>
+            <Button Content="Add Loader" Command="{Binding AddLoaderCommand}" Margin="5" Padding="10,5"/>
+        </StackPanel>
+        
+        <Canvas Grid.Row="1" Background="#ECF0F1" Name="SimulationCanvas">
+            <!-- Oil Rigs -->
+            <ItemsControl ItemsSource="{Binding Rigs}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:OilRig">
+                        <Grid Margin="10">
+                            <Rectangle Width="80" Height="120">
+                                <Rectangle.Fill>
+                                    <SolidColorBrush Color="{Binding IsOnFire, Converter={StaticResource BoolToColorConverter}}"/>
+                                </Rectangle.Fill>
+                                <Rectangle.Stroke>Black</Rectangle.Stroke>
+                                <Rectangle.StrokeThickness>2</Rectangle.StrokeThickness>
+                            </Rectangle>
+                            <Rectangle Width="10" Height="50" Fill="Gray" Margin="35,-50,0,0"/>
+                            <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                            <TextBlock Text="{Binding IsOperational, StringFormat='Operational: {0}'}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,20" Foreground="White"/>
+                            <TextBlock Text="{Binding IsOnFire, StringFormat='On Fire: {0}'}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5" Foreground="White"/>
+                            <ProgressBar Value="{Binding OilStorage}" Maximum="{Binding MaxOilStorage}" Height="10" VerticalAlignment="Bottom" Margin="5"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
+            <!-- Mechanics -->
+            <ItemsControl ItemsSource="{Binding Mechanics}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:Mechanic">
+                        <Canvas>
+                            <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}">
+                                <Ellipse Width="30" Height="30" Fill="Blue" Stroke="Black" StrokeThickness="1"/>
+                                <TextBlock Text="M" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0" Foreground="Black"/>
+                                <TextBlock Text="{Binding IsBusy, StringFormat='Busy: {0}'}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,45,0,0" Foreground="Gray" FontSize="10"/>
+                                <TextBlock Text="{Binding SkillLevel, StringFormat='Skill: {0}'}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,60,0,0" Foreground="Gray" FontSize="10"/>
+                            </Grid>
+                        </Canvas>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
+            <!-- Loaders -->
+            <ItemsControl ItemsSource="{Binding Loaders}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Canvas/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:TruckLoader">
+                        <Canvas>
+                            <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}">
+                                <Rectangle Width="60" Height="40" Fill="Green" Stroke="Black" StrokeThickness="1"/>
+                                <TextBlock Text="T" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0" Foreground="Black"/>
+                                <TextBlock Text="{Binding IsBusy, StringFormat='Busy: {0}'}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,55,0,0" Foreground="Gray" FontSize="10"/>
+                                <ProgressBar Value="{Binding CurrentLoad}" Maximum="{Binding Capacity}" Width="50" Height="5" Margin="0,35,0,0"/>
+                            </Grid>
+                        </Canvas>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Canvas>
+        
+        <Grid Grid.Row="2">
+            <Border BorderBrush="Gray" BorderThickness="0,1,0,0">
+                <TextBox Text="{Binding LogText}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalAlignment="Stretch" Padding="5"/>
+            </Border>
+        </Grid>
+    </Grid>
 </Window>
