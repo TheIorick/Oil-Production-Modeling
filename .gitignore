@@ -1,0 +1,75 @@
+# Сгенерированные файлы сборки
+bin/
+obj/
+
+# Папки с зависимостями
+packages/
+*.nupkg
+
+# Файлы кэша и временные файлы
+*.cache
+*.tmp
+*.bak
+*.swp
+*~
+
+# Файлы Visual Studio / Rider / других IDE
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+.idea/
+*.iml
+.vscode/
+*.vs/
+
+# Файлы отладки и логов
+*.log
+*.pdb
+*.mdb
+
+# Папка с результатами тестов
+TestResults/
+
+# Файлы NuGet
+.nuget/
+NuGet.Config
+
+# Файлы Avalonia
+*.axaml.g.cs
+
+# Папка с артефактами сборки
+publish/
+
+# Локальные настройки и кэш
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+
+# Файлы macOS
+.DS_Store
+
+# Локальные настройки среды
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Пользовательские данные
+*.db
+*.sqlite
+
+# Большие файлы в Assets (если есть)
+Assets/*.png
+Assets/*.jpg
+Assets/*.jpeg
+Assets/*.gif
+Assets/*.mp4
+
+# Специфичные файлы проекта
+app.manifest
