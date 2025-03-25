@@ -1,20 +1,265 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Task3_10.ViewModels"
+        xmlns:m="using:Task3_10.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="Task3_10.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Task3_10">
+        Title="Моделирование добычи нефти"
+        Width="1200" Height="800">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10 5"/>
+            <Setter Property="Background" Value="#2a579a"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Margin" Value="5 5 5 2"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Margin" Value="5 2 5 5"/>
+        </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="Margin" Value="5 2 5 5"/>
+        </Style>
+        <Style Selector="Border.panel">
+            <Setter Property="BorderBrush" Value="#2a579a"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Панель управления -->
+        <Border Grid.Row="0" Classes="panel" Background="#f0f0f0">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <!-- Управление симуляцией -->
+                <StackPanel Grid.Column="0" Width="200">
+                    <TextBlock FontWeight="Bold" FontSize="16">Управление симуляцией</TextBlock>
+                    <Button Command="{Binding StartSimulationCommand}" 
+                            IsEnabled="{Binding !IsSimulationRunning}">
+                        Запустить симуляцию
+                    </Button>
+                    <Button Command="{Binding StopSimulationCommand}" 
+                            IsEnabled="{Binding IsSimulationRunning}">
+                        Остановить симуляцию
+                    </Button>
+                    <Button Command="{Binding UpdateStatisticsCommand}">
+                        Обновить статистику
+                    </Button>
+                </StackPanel>
+
+                <!-- Добавление нефтяной вышки -->
+                <StackPanel Grid.Column="1" Width="220">
+                    <TextBlock FontWeight="Bold" FontSize="16">Добавить нефтяную вышку</TextBlock>
+                    <TextBlock>Название:</TextBlock>
+                    <TextBox Text="{Binding NewRigName}"/>
+                    <TextBlock>Производительность (барр/с):</TextBlock>
+                    <NumericUpDown Value="{Binding NewRigProductionRate}" 
+                                  Minimum="1" Maximum="20" Increment="0.5"/>
+                    <TextBlock>Вместимость хранилища (барр):</TextBlock>
+                    <NumericUpDown Value="{Binding NewRigStorageCapacity}" 
+                                  Minimum="50" Maximum="500" Increment="10"/>
+                    <TextBlock>Вероятность возгорания (0-0.2):</TextBlock>
+                    <NumericUpDown Value="{Binding NewRigFireChance}" 
+                                  Minimum="0" Maximum="0.2" Increment="0.01" FormatString="F2"/>
+                    <Button Command="{Binding AddOilRigCommand}">Добавить вышку</Button>
+                </StackPanel>
+
+                <!-- Добавление механика -->
+                <StackPanel Grid.Column="2" Width="200">
+                    <TextBlock FontWeight="Bold" FontSize="16">Добавить механика</TextBlock>
+                    <TextBlock>Имя механика:</TextBlock>
+                    <TextBox Text="{Binding NewMechanicName}"/>
+                    <TextBlock>Уровень навыка (1-10):</TextBlock>
+                    <NumericUpDown Value="{Binding NewMechanicSkillLevel}" 
+                                  Minimum="1" Maximum="10" Increment="1"/>
+                    <Button Command="{Binding AddMechanicCommand}">Добавить механика</Button>
+                    
+                    <TextBlock FontWeight="Bold" FontSize="16" Margin="0,20,0,0">Добавить погрузчик</TextBlock>
+                    <TextBlock>Название погрузчика:</TextBlock>
+                    <TextBox Text="{Binding NewLoaderName}"/>
+                    <TextBlock>Вместимость (барр):</TextBlock>
+                    <NumericUpDown Value="{Binding NewLoaderCapacity}" 
+                                  Minimum="20" Maximum="200" Increment="10"/>
+                    <Button Command="{Binding AddLoaderCommand}">Добавить погрузчик</Button>
+                </StackPanel>
+                
+                <!-- Растягивающийся промежуток -->
+                <Panel Grid.Column="3"/>
+                
+                <!-- Статистика -->
+                <Border Grid.Column="4" Classes="panel" Width="300">
+                    <StackPanel>
+                        <TextBlock FontWeight="Bold" FontSize="16">Статистика симуляции</TextBlock>
+                        <ScrollViewer Height="170" VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding SimulationStatistics}" TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Основная область -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,300">
+            <!-- Область визуализации -->
+            <Border Grid.Column="0" Classes="panel" Background="#f8f8f8">
+                <Grid RowDefinitions="*,Auto">
+                    <!-- Канвас для отображения моделей -->
+                    <Border Grid.Row="0" Background="White" BorderBrush="#cccccc" BorderThickness="1">
+                        <Canvas Name="SimulationCanvas">
+                            <ItemsControl Items="{Binding OilRigs}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="m:OilRig">
+                                        <Grid Width="120" Height="150">
+                                            <Canvas.Left>
+                                                <Binding Path="X"/>
+                                            </Canvas.Left>
+                                            <Canvas.Top>
+                                                <Binding Path="Y"/>
+                                            </Canvas.Top>
+                                            
+                                            <!-- Нефтяная вышка (графическое представление) -->
+                                            <Border Background="#e0e0e0" CornerRadius="5"
+                                                    BorderBrush="{Binding Status, Converter={StaticResource StatusToBrushConverter}}"
+                                                    BorderThickness="3">
+                                                <Panel>
+                                                    <!-- Изображение вышки -->
+                                                    <Path Fill="#333333" Stretch="Uniform" Margin="10,20,10,30"
+                                                      Data="M10,0 L90,0 L90,100 L75,120 L25,120 L10,100 Z M45,0 L45,40 L55,40 L55,0 Z"/>
+                                                      
+                                                    <!-- Индикатор заполнения нефтью -->
+                                                    <Grid VerticalAlignment="Bottom" Height="30" Margin="10,0,10,5">
+                                                        <Border Background="LightGray" CornerRadius="3"/>
+                                                        <Border Background="#C07830" CornerRadius="3" HorizontalAlignment="Left"
+                                                                Width="{Binding OilAmount, Converter={StaticResource OilAmountToWidthConverter}, ConverterParameter={Binding StorageCapacity}}"/>
+                                                        <TextBlock Text="{Binding OilAmount, StringFormat='{0:F1} бар.'}" 
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10"/>
+                                                    </Grid>
+                                                    
+                                                    <!-- Индикатор пожара -->
+                                                    <Canvas IsVisible="{Binding IsOnFire}">
+                                                        <Path Fill="Red" Canvas.Left="30" Canvas.Top="30"
+                                                              Data="M10,20 C10,10 20,10 20,0 C20,10 30,10 30,20 C30,30 10,30 10,20 Z"/>
+                                                        <Path Fill="Orange" Canvas.Left="60" Canvas.Top="20"
+                                                              Data="M10,20 C10,10 20,10 20,0 C20,10 30,10 30,20 C30,30 10,30 10,20 Z"/>
+                                                    </Canvas>
+                                                    
+                                                    <!-- Название вышки -->
+                                                    <TextBlock Text="{Binding Name}" 
+                                                               HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Top" 
+                                                               Margin="0,5,0,0"
+                                                               FontWeight="Bold"/>
+                                                </Panel>
+                                            </Border>
+                                            
+                                            <!-- Кнопка удаления вышки -->
+                                            <Button Command="{Binding $parent[Window].DataContext.RemoveOilRigCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    VerticalAlignment="Top" HorizontalAlignment="Right"
+                                                    Background="Red" Width="20" Height="20" Padding="0" 
+                                                    Content="X" FontSize="10" Margin="0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Canvas>
+                    </Border>
+                    
+                    <!-- Информация о компонентах -->
+                    <Border Grid.Row="1" Classes="panel" Background="#f0f0f0">
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold">Компоненты симуляции:</TextBlock>
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Нефтяные вышки -->
+                                <Border Classes="panel" Width="220">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold">Нефтяные вышки:</TextBlock>
+                                        <ListBox Items="{Binding OilRigs}" MaxHeight="100">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Name}" Width="100"/>
+                                                        <TextBlock Text="{Binding Status}" Width="100"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Механики -->
+                                <Border Classes="panel" Width="160">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold">Механики:</TextBlock>
+                                        <ListBox Items="{Binding Mechanics}" MaxHeight="100">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Name}" Width="100"/>
+                                                        <TextBlock Text="{Binding IsBusy, StringFormat='{0}'}" Width="50"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </Border>
+                                
+                                <!-- Погрузчики -->
+                                <Border Classes="panel" Width="220">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="Bold">Погрузчики:</TextBlock>
+                                        <ListBox Items="{Binding Loaders}" MaxHeight="100">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Name}" Width="100"/>
+                                                        <TextBlock Text="{Binding CurrentCapacity, StringFormat='{0:F1}/{1:F1}', StringFormat='{0}'}" Width="100"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+            
+            <!-- Логи -->
+            <Border Grid.Column="1" Classes="panel" Background="#f0f0f0">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <TextBlock Grid.Row="0" FontWeight="Bold" FontSize="16">Журнал событий</TextBlock>
+                    <ListBox Grid.Row="1" Items="{Binding LogMessages}" 
+                             Background="White" BorderBrush="#cccccc" BorderThickness="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Grid.Row="2" Command="{Binding ClearLogsCommand}">Очистить журнал</Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
 
 </Window>
