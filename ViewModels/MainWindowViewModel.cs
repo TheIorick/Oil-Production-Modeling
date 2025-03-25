@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
+using System.Linq; // Обязательно добавьте эту директиву для LINQ-методов (Where, FirstOrDefault)
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Reflection;
 using Task3_10.Models;
-using Avalonia.Threading;
-using System.Collections.ObjectModel;
+using Avalonia.Threading; // Для работы с Dispatcher.UIThread
 
 namespace Task3_10.ViewModels
 {
@@ -128,78 +127,99 @@ namespace Task3_10.ViewModels
         
         private void AddRig()
         {
-            // Create a new oil rig with random parameters
-            var rig = new OilRig
+            try
             {
-                Name = $"Rig-{_rigs.Count + 1}",
-                OilExtractionRate = _random.Next(10, 30),
-                FireProbability = _random.Next(1, 10) / 100.0, // 1-10%
-                MaxOilStorage = _random.Next(500, 1000)
-            };
-            
-            var rigViewModel = new OilRigViewModel(rig);
-            
-            // Subscribe to fire events
-            rig.FireOccurred += (s, e) => 
-            {
-                Dispatcher.UIThread.InvokeAsync(() => 
+                // Create a new oil rig with random parameters
+                var rig = new OilRig
                 {
-                    AddLog($"Fire occurred at {rig.Name} with severity {e.Severity}!");
-                });
-            };
-            
-            Rigs.Add(rigViewModel);
-            rigViewModel.StartExtraction();
-            AddLog($"Added new oil rig: {rig.Name}");
+                    Name = $"Rig-{_rigs.Count + 1}",
+                    OilExtractionRate = _random.Next(10, 30),
+                    FireProbability = _random.Next(1, 10) / 100.0, // 1-10%
+                    MaxOilStorage = _random.Next(500, 1000)
+                };
+                
+                var rigViewModel = new OilRigViewModel(rig);
+                
+                // Subscribe to fire events
+                rig.FireOccurred += (s, e) => 
+                {
+                    Dispatcher.UIThread.InvokeAsync(() => 
+                    {
+                        AddLog($"Fire occurred at {rig.Name} with severity {e.Severity}!");
+                    });
+                };
+                
+                Rigs.Add(rigViewModel);
+                rigViewModel.StartExtraction();
+                AddLog($"Added new oil rig: {rig.Name}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Error adding rig: {ex.Message}");
+            }
         }
         
         private void AddMechanic()
         {
-            // Create a new mechanic with random parameters
-            var mechanic = new Mechanic
+            try
             {
-                Name = $"Mechanic-{_mechanics.Count + 1}",
-                SkillLevel = _random.Next(1, 11) // 1-10
-            };
-            
-            var mechanicViewModel = new MechanicViewModel(mechanic);
-            
-            // Subscribe to repair events
-            mechanic.RepairCompleted += (s, e) => 
-            {
-                Dispatcher.UIThread.InvokeAsync(() => 
+                // Create a new mechanic with random parameters
+                var mechanic = new Mechanic
                 {
-                    AddLog($"{mechanic.Name} completed repairs on {e.Rig.Name} in {e.RepairTimeSeconds} seconds");
-                });
-            };
-            
-            Mechanics.Add(mechanicViewModel);
-            AddLog($"Added new mechanic: {mechanic.Name} with skill level {mechanic.SkillLevel}");
+                    Name = $"Mechanic-{_mechanics.Count + 1}",
+                    SkillLevel = _random.Next(1, 11) // 1-10
+                };
+                
+                var mechanicViewModel = new MechanicViewModel(mechanic);
+                
+                // Subscribe to repair events
+                mechanic.RepairCompleted += (s, e) => 
+                {
+                    Dispatcher.UIThread.InvokeAsync(() => 
+                    {
+                        AddLog($"{mechanic.Name} completed repairs on {e.Rig.Name} in {e.RepairTimeSeconds} seconds");
+                    });
+                };
+                
+                Mechanics.Add(mechanicViewModel);
+                AddLog($"Added new mechanic: {mechanic.Name} with skill level {mechanic.SkillLevel}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Error adding mechanic: {ex.Message}");
+            }
         }
         
         private void AddLoader()
         {
-            // Create a new loader with random parameters
-            var loader = new TruckLoader
+            try
             {
-                Name = $"Loader-{_loaders.Count + 1}",
-                Capacity = _random.Next(100, 300),
-                Speed = _random.Next(40, 80)
-            };
-            
-            var loaderViewModel = new LoaderViewModel(loader);
-            
-            // Subscribe to loading events
-            loader.LoadingCompleted += (s, e) => 
-            {
-                Dispatcher.UIThread.InvokeAsync(() => 
+                // Create a new loader with random parameters
+                var loader = new TruckLoader
                 {
-                    AddLog($"{loader.Name} loaded {e.Amount:F1} barrels from {e.Rig.Name}");
-                });
-            };
-            
-            Loaders.Add(loaderViewModel);
-            AddLog($"Added new loader: {loader.Name} with capacity {loader.Capacity}");
+                    Name = $"Loader-{_loaders.Count + 1}",
+                    Capacity = _random.Next(100, 300),
+                    Speed = _random.Next(40, 80)
+                };
+                
+                var loaderViewModel = new LoaderViewModel(loader);
+                
+                // Subscribe to loading events
+                loader.LoadingCompleted += (s, e) => 
+                {
+                    Dispatcher.UIThread.InvokeAsync(() => 
+                    {
+                        AddLog($"{loader.Name} loaded {e.Amount:F1} barrels from {e.Rig.Name}");
+                    });
+                };
+                
+                Loaders.Add(loaderViewModel);
+                AddLog($"Added new loader: {loader.Name} with capacity {loader.Capacity}");
+            }
+            catch (Exception ex)
+            {
+                AddLog($"Error adding loader: {ex.Message}");
+            }
         }
         
         private void AddLog(string message)
@@ -214,12 +234,11 @@ namespace Task3_10.ViewModels
         }
     }
     
+    // Реализация команды ICommand если её нет в проекте
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
         private readonly Func<bool> _canExecute;
-        
-        public event EventHandler CanExecuteChanged;
         
         public RelayCommand(Action execute, Func<bool> canExecute = null)
         {
@@ -227,7 +246,9 @@ namespace Task3_10.ViewModels
             _canExecute = canExecute;
         }
         
-        public bool CanExecute(object parameter) => _canExecute == null || _canExecute();
+        public event EventHandler CanExecuteChanged;
+        
+        public bool CanExecute(object parameter) => _canExecute?.Invoke() ?? true;
         
         public void Execute(object parameter) => _execute();
         
