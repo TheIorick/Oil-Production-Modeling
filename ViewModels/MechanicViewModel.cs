@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks;
 using Task3_10.Models;
 using System.ComponentModel;
+using Avalonia.Threading;
 
 namespace Task3_10.ViewModels
 {
@@ -53,6 +54,9 @@ namespace Task3_10.ViewModels
             _model.X = _x;
             _model.Y = _y;
             
+            // Логирование создания объекта
+            Log($"MechanicViewModel created: {Name}, X={X}, Y={Y}");
+            
             // Subscribe to model events
             _model.PropertyChanged += OnModelPropertyChanged;
             _model.RepairCompleted += OnRepairCompleted;
@@ -63,22 +67,30 @@ namespace Task3_10.ViewModels
             if (e.PropertyName == nameof(Mechanic.IsBusy))
             {
                 Status = _model.IsBusy ? "Busy" : "Available";
+                Log($"{Name} status changed: {Status}");
             }
             
             if (e.PropertyName == nameof(Mechanic.X))
             {
                 X = _model.X;
+                // Логируем только значительные изменения позиции
+                if (Math.Abs(_x - _model.X) > 10)
+                    Log($"{Name} X position changed: {X}");
             }
             
             if (e.PropertyName == nameof(Mechanic.Y))
             {
                 Y = _model.Y;
+                // Логируем только значительные изменения позиции
+                if (Math.Abs(_y - _model.Y) > 10)
+                    Log($"{Name} Y position changed: {Y}");
             }
         }
         
         private void OnRepairCompleted(object sender, RepairCompletedEventArgs e)
         {
             Status = "Repair Completed";
+            Log($"{Name} completed repair of {e.Rig.Name}");
         }
         
         public async Task MoveTo(double targetX, double targetY, double speed = 50)
@@ -89,6 +101,8 @@ namespace Task3_10.ViewModels
             _isMoving = true;
             _targetX = targetX;
             _targetY = targetY;
+            
+            Log($"{Name} moving to X={targetX}, Y={targetY}");
             
             _movementTask = Task.Run(async () =>
             {
@@ -116,6 +130,7 @@ namespace Task3_10.ViewModels
                 }
                 
                 _isMoving = false;
+                Log($"{Name} arrived at X={X}, Y={Y}");
             });
             
             await _movementTask;
@@ -135,6 +150,12 @@ namespace Task3_10.ViewModels
             
             // Start repair
             await _model.RepairRig(rigViewModel.Model, 3); // Assuming fire severity is 3
+        }
+
+         private void Log(string message)
+        {
+            Dispatcher.UIThread.Post(() => 
+                MainWindowViewModel.GlobalLogAction?.Invoke($"[Mechanic] {message}"));
         }
     }
 }

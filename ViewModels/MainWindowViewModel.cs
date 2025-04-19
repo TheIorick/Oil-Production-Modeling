@@ -47,6 +47,7 @@ namespace Task3_10.ViewModels
         public ICommand AddMechanicCommand { get; }
         public ICommand AddLoaderCommand { get; }
         
+        public static Action<string> GlobalLogAction { get; private set; }
         public MainWindowViewModel()
         {
             _rigs = new ObservableCollection<OilRigViewModel>();
@@ -55,6 +56,11 @@ namespace Task3_10.ViewModels
             _logText = "Simulation started.\n";
             _random = new Random();
             
+             // Установка глобального логгера
+            GlobalLogAction = AddLog;
+            
+            // Добавляем отладочную информацию
+            AddLog("MainWindowViewModel initialized");
             // Initialize commands
             AddRigCommand = new RelayCommand(AddRig);
             AddMechanicCommand = new RelayCommand(AddMechanic);
@@ -68,6 +74,8 @@ namespace Task3_10.ViewModels
             
             _simulationTimer.Tick += SimulationTimerTick;
             _simulationTimer.Start();
+
+            AddLog("Simulation timer started");
         }
         
         private async void SimulationTimerTick(object sender, EventArgs e)
@@ -126,38 +134,47 @@ namespace Task3_10.ViewModels
         }
         
         private void AddRig()
+{
+    try
+    {
+        // Create a new oil rig with random parameters
+        var rig = new OilRig
         {
-            try
+            Name = $"Rig-{_rigs.Count + 1}",
+            OilExtractionRate = _random.Next(10, 30),
+            FireProbability = _random.Next(1, 10) / 100.0, // 1-10%
+            MaxOilStorage = _random.Next(500, 1000)
+        };
+        
+        var rigViewModel = new OilRigViewModel(rig);
+        
+        // Детальное логирование
+        AddLog($"Creating new rig: {rig.Name}");
+        AddLog($"Rig position: X={rigViewModel.X}, Y={rigViewModel.Y}");
+        AddLog($"Oil extraction rate: {rig.OilExtractionRate} barrels/min");
+        AddLog($"Fire probability: {rig.FireProbability * 100}%");
+        AddLog($"Max oil storage: {rig.MaxOilStorage} barrels");
+        
+        // Subscribe to fire events
+        rig.FireOccurred += (s, e) => 
+        {
+            Dispatcher.UIThread.InvokeAsync(() => 
             {
-                // Create a new oil rig with random parameters
-                var rig = new OilRig
-                {
-                    Name = $"Rig-{_rigs.Count + 1}",
-                    OilExtractionRate = _random.Next(10, 30),
-                    FireProbability = _random.Next(1, 10) / 100.0, // 1-10%
-                    MaxOilStorage = _random.Next(500, 1000)
-                };
-                
-                var rigViewModel = new OilRigViewModel(rig);
-                
-                // Subscribe to fire events
-                rig.FireOccurred += (s, e) => 
-                {
-                    Dispatcher.UIThread.InvokeAsync(() => 
-                    {
-                        AddLog($"Fire occurred at {rig.Name} with severity {e.Severity}!");
-                    });
-                };
-                
-                Rigs.Add(rigViewModel);
-                rigViewModel.StartExtraction();
-                AddLog($"Added new oil rig: {rig.Name}");
-            }
-            catch (Exception ex)
-            {
-                AddLog($"Error adding rig: {ex.Message}");
-            }
-        }
+                AddLog($"Fire occurred at {rig.Name} with severity {e.Severity}!");
+            });
+        };
+        
+        Rigs.Add(rigViewModel);
+        rigViewModel.StartExtraction();
+        AddLog($"Rig added to collection. Collection count: {Rigs.Count}");
+    }
+    catch (Exception ex)
+    {
+        AddLog($"Error adding rig: {ex.Message}");
+        // Выводим полную информацию об исключении для отладки
+        AddLog($"Exception details: {ex}");
+    }
+}
         
         private void AddMechanic()
         {
@@ -203,7 +220,9 @@ namespace Task3_10.ViewModels
                 };
                 
                 var loaderViewModel = new LoaderViewModel(loader);
-                
+                 // Log the loader creation with position
+                AddLog($"Creating loader: {loader.Name} at position X={loaderViewModel.X}, Y={loaderViewModel.Y}");
+           
                 // Subscribe to loading events
                 loader.LoadingCompleted += (s, e) => 
                 {
@@ -231,6 +250,9 @@ namespace Task3_10.ViewModels
             {
                 LogText = LogText.Substring(0, 5000);
             }
+            
+            // Также выводим в консоль для отладки
+            Console.WriteLine($"[LOG] {message}");
         }
     }
     

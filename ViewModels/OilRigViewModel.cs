@@ -1,6 +1,7 @@
 ﻿using System;
 using Task3_10.Models;
 using System.ComponentModel;
+using System.Diagnostics; // Добавляем для трассировки
 
 namespace Task3_10.ViewModels
 {
@@ -38,13 +39,27 @@ namespace Task3_10.ViewModels
         public double X
         {
             get => _x;
-            set => SetProperty(ref _x, value);
+            set
+            {
+                if (SetProperty(ref _x, value))
+                {
+                    // Выводим значение в консоль для отладки
+                    Debug.WriteLine($"Rig {Name} X changed to {value}");
+                }
+            }
         }
         
         public double Y
         {
             get => _y;
-            set => SetProperty(ref _y, value);
+            set
+            {
+                if (SetProperty(ref _y, value))
+                {
+                    // Выводим значение в консоль для отладки
+                    Debug.WriteLine($"Rig {Name} Y changed to {value}");
+                }
+            }
         }
         
         public OilRigViewModel(OilRig model)
@@ -54,12 +69,15 @@ namespace Task3_10.ViewModels
             _isOnFire = model.IsOnFire;
             _oilStorage = model.OilStorage;
             
-            // Random position for the rig
+            // Задаём случайную позицию для нефтяной вышки
             var random = new Random();
             _x = random.Next(100, 700);
             _y = random.Next(100, 300);
             
-            // Subscribe to model events
+            // Выводим данные для отладки
+            Debug.WriteLine($"Created OilRig: {Name}, X={X}, Y={Y}");
+            
+            // Подписываемся на события модели
             _model.OilExtracted += OnOilExtracted;
             _model.PropertyChanged += OnModelPropertyChanged;
         }
@@ -71,15 +89,17 @@ namespace Task3_10.ViewModels
         
         private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            // Update view model properties when model properties change
+            // Обновляем свойства ViewModel при изменении свойств модели
             if (e.PropertyName == nameof(OilRig.IsOperational) || e.PropertyName == nameof(OilRig.IsOnFire))
             {
                 Status = _model.IsOperational ? (_model.IsOnFire ? "On Fire!" : "Operational") : "Not Operational";
+                Debug.WriteLine($"Rig {Name} status changed to {Status}");
             }
             
             if (e.PropertyName == nameof(OilRig.IsOnFire))
             {
                 IsOnFire = _model.IsOnFire;
+                Debug.WriteLine($"Rig {Name} fire status changed to {IsOnFire}");
             }
             
             if (e.PropertyName == nameof(OilRig.OilStorage))
@@ -91,11 +111,13 @@ namespace Task3_10.ViewModels
         public void StartExtraction()
         {
             _model.StartExtraction();
+            Debug.WriteLine($"Rig {Name} started extraction");
         }
         
         public void StopExtraction()
         {
             _model.StopExtraction();
+            Debug.WriteLine($"Rig {Name} stopped extraction");
         }
     }
 }

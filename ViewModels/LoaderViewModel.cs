@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Task3_10.Models;
 using System.ComponentModel;
+using Avalonia.Threading;
 
 namespace Task3_10.ViewModels
 {
@@ -55,9 +56,20 @@ namespace Task3_10.ViewModels
             _model.X = _x;
             _model.Y = _y;
             
-            // Subscribe to model events
-            ((INotifyPropertyChanged)_model).PropertyChanged += OnModelPropertyChanged;
-            _model.LoadingCompleted += OnLoadingCompleted;
+            // Логирование создания объекта
+            Log($"LoaderViewModel created: {Name}, X={X}, Y={Y}");
+            
+            try
+            {
+                // Subscribe to model events
+                ((INotifyPropertyChanged)_model).PropertyChanged += OnModelPropertyChanged;
+                _model.LoadingCompleted += OnLoadingCompleted;
+                Log("Successfully subscribed to model events");
+            }
+            catch (Exception ex)
+            {
+                Log($"Error subscribing to events: {ex.Message}");
+            }
         }
         
         private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -65,21 +77,29 @@ namespace Task3_10.ViewModels
             if (e.PropertyName == nameof(IOilLoader.IsBusy))
             {
                 Status = _model.IsBusy ? "Busy" : "Available";
+                Log($"{Name} status changed: {Status}");
             }
             
             if (e.PropertyName == nameof(IOilLoader.CurrentLoad))
             {
                 OnPropertyChanged(nameof(CurrentLoad));
+                Log($"{Name} current load: {CurrentLoad:F1}/{Capacity}");
             }
             
             if (e.PropertyName == nameof(IOilLoader.X))
             {
                 X = _model.X;
+                // Логируем только значительные изменения позиции
+                if (Math.Abs(_x - _model.X) > 10)
+                    Log($"{Name} X position changed: {X}");
             }
             
             if (e.PropertyName == nameof(IOilLoader.Y))
             {
                 Y = _model.Y;
+                // Логируем только значительные изменения позиции
+                if (Math.Abs(_y - _model.Y) > 10)
+                    Log($"{Name} Y position changed: {Y}");
             }
         }
         
@@ -87,6 +107,7 @@ namespace Task3_10.ViewModels
         {
             Status = "Loading Completed";
             OnPropertyChanged(nameof(CurrentLoad));
+            Log($"{Name} completed loading {e.Amount:F1} from {e.Rig.Name}");
         }
         
         public async Task MoveTo(double targetX, double targetY, double speed = 80)
@@ -97,6 +118,8 @@ namespace Task3_10.ViewModels
             _isMoving = true;
             _targetX = targetX;
             _targetY = targetY;
+            
+            Log($"{Name} moving to X={targetX}, Y={targetY}");
             
             _movementTask = Task.Run(async () =>
             {
@@ -124,6 +147,7 @@ namespace Task3_10.ViewModels
                 }
                 
                 _isMoving = false;
+                Log($"{Name} arrived at X={X}, Y={Y}");
             });
             
             await _movementTask;
@@ -152,6 +176,12 @@ namespace Task3_10.ViewModels
                 await _model.TransportOil();
                 Status = "Available";
             }
+        }
+
+        private void Log(string message)
+        {
+            Dispatcher.UIThread.Post(() => 
+                MainWindowViewModel.GlobalLogAction?.Invoke($"[Loader] {message}"));
         }
     }
 }

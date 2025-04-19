@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Task3_10.Models
 {
-    
-    public class TruckLoader : IOilLoader, INotifyPropertyChanged
+    public class TruckLoader : INotifyPropertyChanged, IOilLoader
     {
-        // Implement IOilLoader interface
         public event EventHandler<LoadingCompletedEventArgs> LoadingCompleted;
         public event PropertyChangedEventHandler PropertyChanged;
         
@@ -20,9 +16,8 @@ namespace Task3_10.Models
         private bool _isBusy;
         private double _x;
         private double _y;
-        private double _speed;
+        private double _speed; // скорость перемещения
         
-        // Properties with notification
         public string Name 
         { 
             get => _name; 
@@ -59,10 +54,10 @@ namespace Task3_10.Models
             set { _y = value; OnPropertyChanged(); } 
         }
         
-        public double Speed 
-        { 
-            get => _speed; 
-            set { _speed = value; OnPropertyChanged(); } 
+        public double Speed
+        {
+            get => _speed;
+            set { _speed = value; OnPropertyChanged(); }
         }
         
         public TruckLoader()
@@ -73,23 +68,30 @@ namespace Task3_10.Models
         
         public async Task LoadOil(OilRig rig, double amount)
         {
-            if (IsBusy || CurrentLoad >= Capacity)
+            if (IsBusy || amount <= 0 || CurrentLoad >= Capacity)
                 return;
                 
             IsBusy = true;
             
-            // Request oil shipment from rig
-            double loadedAmount = rig.RequestOilShipment(Math.Min(amount, Capacity - CurrentLoad));
+            // Simulate loading time based on amount
+            int loadingTimeSeconds = (int)(3 + amount / 50);
             
-            // Simulate loading time (1 second per 10 barrels)
-            int loadingTimeSeconds = (int)(loadedAmount / 10);
-            await Task.Delay(loadingTimeSeconds * 1000);
+            // Request oil from the rig
+            double actualLoadedAmount = rig.RequestOilShipment(Math.Min(amount, Capacity - CurrentLoad));
             
-            // Update current load
-            CurrentLoad += loadedAmount;
-            
-            // Notify loading completed
-            OnLoadingCompleted(new LoadingCompletedEventArgs { Amount = loadedAmount, Rig = rig });
+            if (actualLoadedAmount > 0)
+            {
+                // Simulate loading time
+                await Task.Delay(loadingTimeSeconds * 1000);
+                
+                CurrentLoad += actualLoadedAmount;
+                
+                // Notify loading completed
+                LoadingCompleted?.Invoke(this, new LoadingCompletedEventArgs { 
+                    Amount = actualLoadedAmount, 
+                    Rig = rig 
+                });
+            }
             
             IsBusy = false;
         }
@@ -101,18 +103,16 @@ namespace Task3_10.Models
                 
             IsBusy = true;
             
-            // Simulate transport time (distance based or fixed)
-            await Task.Delay(5000);
+            // Simulate transport time based on current load and speed
+            int transportTimeSeconds = (int)(5 + CurrentLoad / (Speed / 10));
             
-            // Reset load after delivery
+            // Simulate transport
+            await Task.Delay(transportTimeSeconds * 1000);
+            
+            // Reset current load after delivery
             CurrentLoad = 0;
             
             IsBusy = false;
-        }
-        
-        protected virtual void OnLoadingCompleted(LoadingCompletedEventArgs e)
-        {
-            LoadingCompleted?.Invoke(this, e);
         }
         
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

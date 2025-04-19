@@ -8,15 +8,13 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Task3_10.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
+        Width="800" Height="600"
         Icon="/Assets/avalonia-logo.ico"
         Title="Oil Extraction Simulation">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
-    <Window.Resources>
-        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
-    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -28,103 +26,12 @@
             <Button Content="Add Oil Rig" Command="{Binding AddRigCommand}" Margin="5" Padding="10,5"/>
             <Button Content="Add Mechanic" Command="{Binding AddMechanicCommand}" Margin="5" Padding="10,5"/>
             <Button Content="Add Loader" Command="{Binding AddLoaderCommand}" Margin="5" Padding="10,5"/>
+            <Button Content="Debug Info" Name="DebugButton" Margin="5" Padding="10,5"/>
         </StackPanel>
         
-        <Canvas Grid.Row="1" Background="#F5F5F5" Name="SimulationCanvas">
-            <!-- Oil Rigs -->
-            <ItemsControl ItemsSource="{Binding Rigs}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:OilRigViewModel">
-                        <Canvas>
-                            <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}">
-                                <!-- База буровой -->
-                                <Rectangle Width="80" Height="120" Stroke="Black" StrokeThickness="2">
-                                    <Rectangle.Fill>
-                                        <SolidColorBrush Color="{Binding IsOnFire, Converter={StaticResource BoolToColorConverter}}"/>
-                                    </Rectangle.Fill>
-                                </Rectangle>
-                                
-                                <!-- Вышка буровой -->
-                                <Rectangle Width="10" Height="50" Fill="Gray" Margin="35,-50,0,0" />
-                                
-                                <!-- Информация о состоянии -->
-                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
-                                <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" 
-                                           VerticalAlignment="Bottom" Margin="0,0,0,20" Foreground="White"/>
-                                
-                                <!-- Индикатор запаса нефти -->
-                                <ProgressBar Value="{Binding OilStorage}" Maximum="1000" Height="10" 
-                                             VerticalAlignment="Bottom" Margin="5" Foreground="OrangeRed"/>
-                            </Grid>
-                        </Canvas>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            
-            <!-- Mechanics -->
-            <ItemsControl ItemsSource="{Binding Mechanics}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:MechanicViewModel">
-                        <Canvas>
-                            <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}">
-                                <!-- Механик (круг) -->
-                                <Ellipse Width="30" Height="30" Fill="RoyalBlue" Stroke="Black" StrokeThickness="1"/>
-                                <TextBlock Text="M" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
-                                
-                                <!-- Информация о механике -->
-                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Top" 
-                                           Margin="0,30,0,0" Foreground="Black"/>
-                                <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" 
-                                           VerticalAlignment="Top" Margin="0,45,0,0" Foreground="Gray" FontSize="10"/>
-                            </Grid>
-                        </Canvas>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            
-            <!-- Loaders -->
-            <ItemsControl ItemsSource="{Binding Loaders}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:LoaderViewModel">
-                        <Canvas>
-                            <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}">
-                                <!-- Грузовик (прямоугольник) -->
-                                <Rectangle Width="60" Height="40" Fill="ForestGreen" Stroke="Black" StrokeThickness="1"/>
-                                <Ellipse Width="12" Height="12" Fill="Black" Canvas.Left="8" Canvas.Top="28" 
-                                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,0,0,0"/>
-                                <Ellipse Width="12" Height="12" Fill="Black" Canvas.Right="8" Canvas.Top="28" 
-                                         HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,8,0"/>
-                                <TextBlock Text="T" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
-                                
-                                <!-- Информация о грузовике -->
-                                <TextBlock Text="{Binding Name}" HorizontalAlignment="Center" VerticalAlignment="Top" 
-                                           Margin="0,40,0,0" Foreground="Black"/>
-                                <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" 
-                                           VerticalAlignment="Top" Margin="0,55,0,0" Foreground="Gray" FontSize="10"/>
-                                
-                                <!-- Индикатор загрузки нефти -->
-                                <ProgressBar Value="{Binding CurrentLoad}" Maximum="{Binding Capacity}" Width="50" Height="5" 
-                                             Margin="0,0,0,5" VerticalAlignment="Bottom" Foreground="OrangeRed"/>
-                            </Grid>
-                        </Canvas>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+        <!-- Используем простой Canvas без ItemsControl -->
+        <Canvas Grid.Row="1" Background="LightGray" Name="SimulationCanvas">
+            <!-- Элементы будут добавляться программно -->
         </Canvas>
         
         <Grid Grid.Row="2">

@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="800" Height="600"
+        x:Class="Task3_10.Views.SimplestTestView"
+        Title="Oil Extraction Simulation - Simple Test">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Orientation="Horizontal" Margin="10">
+            <Button Content="Add Test Shapes" Click="AddShapes_Click" Margin="5"/>
+            <Button Content="Clear Canvas" Click="ClearCanvas_Click" Margin="5"/>
+        </StackPanel>
+        
+        <!-- Намеренно задаем яркий цвет фона, чтобы было видно Canvas -->
+        <Canvas Grid.Row="1" Background="LightBlue" Name="TestCanvas">
+            <!-- Добавляем элемент прямо в XAML, чтобы убедиться, что Canvas виден -->
+            <Rectangle Width="100" Height="100" Fill="Red" Canvas.Left="50" Canvas.Top="50"/>
+            <Ellipse Width="80" Height="80" Fill="Green" Canvas.Left="200" Canvas.Top="100"/>
+            <TextBlock Text="Если вы видите этот текст, Canvas работает!" 
+                       Canvas.Left="300" Canvas.Top="150" 
+                       FontSize="16" FontWeight="Bold"/>
+        </Canvas>
+    </Grid>
+</Window>
