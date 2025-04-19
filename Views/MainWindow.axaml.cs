@@ -4,6 +4,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+\using Avalonia.Threading; 
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
